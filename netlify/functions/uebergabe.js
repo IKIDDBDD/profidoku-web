@@ -2,8 +2,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+  try {const res = await fetch('/.netlify/functions/uebergabe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
