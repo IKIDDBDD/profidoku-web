@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f1c2e" />
+  <title>ProfiDoku</title>
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1c2e; color: #e8f0f7;
+      min-height: 100vh; transition: background 0.3s, color 0.3s;
+    }
+    body.light { background: #f0f4f8; color: #1a2a3a; }
+
+    .header {
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(100,160,220,0.2);
+      padding: 16px; display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 100; transition: background 0.3s;
+    }
+    body.light .header {
+      background: rgba(255,255,255,0.95);
+      border-bottom-color: rgba(42,127,193,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .logo-box {
+      width: 50px; height: 50px; border-radius: 14px;
+      background: linear-gradient(135deg, #2a7fc1, #1a5a8f);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; border: 1px solid rgba(100,160,220,0.4); flex-shrink: 0;
+    }
+    .header-text { flex: 1; }
+    .app-name { font-size: 18px; font-weight: 800; color: #a8d4f5; letter-spacing: 0.5px; }
+    body.light .app-name { color: #1a5a8f; }
+    .company { font-size: 12px; color: #6a9cc0; font-weight: 600; }
+    body.light .company { color: #3a7aaa; }
+    .slogan { font-size: 10px; color: #4a7a9b; font-style: italic; }
+    body.light .slogan { color: #6a9cc0; }
+
+    .mode-btns { display: flex; gap: 5px; }
+    .mode-btn {
+      padding: 5px 10px; border-radius: 10px;
+      border: 1px solid rgba(100,160,220,0.25);
+      background: transparent; font-size: 15px; cursor: pointer; transition: all 0.2s;
+    }
+    .mode-btn.active { background: rgba(42,127,193,0.2); border-color: #2a7fc1; }
+
+    .content { padding: 14px; display: flex; flex-direction: column; gap: 12px; max-width: 480px; margin: 0 auto; padding-bottom: 40px; }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(100,160,220,0.25);
+      border-radius: 16px; padding: 16px; transition: background 0.3s;
+    }
+    body.light .card {
+      background: rgba(255,255,255,0.95);
+      border-color: rgba(42,127,193,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .card-result { border-color: rgba(100,220,160,0.25); }
+    body.light .card-result { border-color: rgba(30,160,100,0.25); }
+
+    .card-label { font-size: 10px; letter-spacing: 1px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; color: #7ab8e0; }
+    body.light .card-label { color: #2a6a9a; }
+    .card-label-green { color: #7ae0b0 !important; }
+    body.light .card-label-green { color: #1a9e6a !important; }
+
+    textarea {
+      width: 100%; min-height: 130px; resize: none;
+      background: rgba(10,25,45,0.7);
+      border: 1px solid rgba(100,160,220,0.25);
+      border-radius: 10px; padding: 14px;
+      color: #d4eaf7; font-size: 15px; line-height: 1.6;
+      font-family: inherit; outline: none; transition: border-color 0.2s, background 0.3s;
+    }
+    body.light textarea { background: #fff; border-color: rgba(42,127,193,0.2); color: #1a2a3a; }
+    textarea:focus { border-color: rgba(42,127,193,0.6); }
+    textarea::placeholder { color: #4a7a9b; }
+    body.light textarea::placeholder { color: #6a9cc0; }
+
+    .hint { font-size: 11px; color: #4a7a9b; font-style: italic; margin: 8px 0 12px; }
+    body.light .hint { color: #6a9cc0; }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn-generate {
+      flex: 1; background: linear-gradient(135deg, #2a7fc1, #1a5a8f);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 14px; font-size: 15px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 16px rgba(42,127,193,0.35); transition: all 0.2s; font-family: inherit;
+    }
+    .btn-generate:disabled { background: rgba(42,100,150,0.3); box-shadow: none; cursor: not-allowed; }
+    .btn-generate:active:not(:disabled) { transform: scale(0.98); }
+
+    .btn-clear {
+      width: 52px; background: rgba(220,80,80,0.15);
+      border: 1px solid rgba(220,80,80,0.4); border-radius: 10px; padding: 14px;
+      font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .btn-clear:disabled { background: rgba(100,100,100,0.1); border-color: rgba(100,100,100,0.2); opacity: 0.5; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .btn-copy {
+      border: 1px solid rgba(100,160,220,0.3); background: rgba(100,160,220,0.1);
+      border-radius: 8px; padding: 5px 14px; color: #7ab8e0; font-size: 12px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-copy.copied { border-color: rgba(50,200,120,0.4); background: rgba(50,200,120,0.15); color: #7ae0b0; }
+    body.light .btn-copy { color: #2a6a9a; }
+
+    .relevanz-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid; border-radius: 20px; padding: 5px 14px; margin-bottom: 12px; font-size: 12px; font-weight: 700;
+    }
+    .relevanz-uebergabe { background: rgba(220,80,80,0.15); border-color: rgba(220,80,80,0.5); color: #f09090; }
+    .relevanz-berichteblatt { background: rgba(80,160,220,0.15); border-color: rgba(80,160,220,0.5); color: #90c8f0; }
+    body.light .relevanz-uebergabe { color: #c03030; }
+    body.light .relevanz-berichteblatt { color: #1a5a8f; }
+
+    .result-box {
+      background: rgba(10,25,45,0.5); border: 1px solid rgba(100,220,160,0.15);
+      border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.7; color: #c8e8d8;
+    }
+    body.light .result-box { background: #eaf4ff; color: #1a4a2a; border-color: rgba(30,160,100,0.2); }
+
+    .kategorien-container { margin-top: 14px; }
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag { border: 1px solid; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+
+    .error-box {
+      background: rgba(200,50,50,0.1); border: 1px solid rgba(200,50,50,0.3);
+      border-radius: 12px; padding: 14px; color: #f08080; font-size: 13px;
+    }
+    body.light .error-box { background: rgba(200,50,50,0.08); color: #c03030; }
+
+    .footer { text-align: center; color: #4a7a9b; font-size: 11px; font-style: italic; padding: 8px 0; }
+    body.light .footer { color: #8aacc0; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-box">⭐</div>
+    <div class="header-text">
+      <div class="app-name">ProfiDoku</div>
+      <div class="company">PflegeteamStella</div>
+      <div class="slogan">Professionelle Pflege beginnt mit guter Dokumentation</div>
+    </div>
+    <div class="mode-btns">
+      <button class="mode-btn" id="btn-light" onclick="setMode('light')">☀️</button>
+      <button class="mode-btn active" id="btn-dark" onclick="setMode('dark')">🌙</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-label">📋 Ereignisse / Notizen eingeben</div>
+      <textarea id="input" placeholder="Beispiel:&#10;Klient heute spazieren gewesen. RR 130/80..."></textarea>
+      <div class="hint">💡 Stichpunkte genügen – ProfiDoku formuliert den Rest</div>
+      <div class="btn-row">
+        <button class="btn-generate" id="btn-generate" onclick="generate()" disabled>✦ Übergabe erstellen</button>
+        <button class="btn-clear" id="btn-clear" onclick="clearAll()" disabled>🗑️</button>
+      </div>
+    </div>
+
+    <div class="error-box" id="error-box" style="display:none"></div>
+
+    <div class="card card-result fade-in" id="result-card" style="display:none">
+      <div class="result-header">
+        <div class="card-label card-label-green">📄 Professionelle Übergabe</div>
+        <button class="btn-copy" id="btn-copy" onclick="copyText()">Kopieren</button>
+      </div>
+      <div id="relevanz-badge"></div>
+      <div class="result-box" id="result-text"></div>
+      <div class="kategorien-container" id="kategorien-container" style="display:none">
+        <div class="card-label" style="margin-bottom:0">🏷️ Kategorien</div>
+        <div class="tags-row" id="tags-row"></div>
+      </div>
+    </div>
+
+    <div class="footer">© 2025 PflegeteamStella · ProfiDoku v1.0</div>
+  </div>
+
+<script>
+const PROMPT = `Du bist eine erfahrene Pflegefachkraft. Wandle Pflegenotizen in präzise, fachlich korrekte Übergaben um.
+
+Regeln:
+- Priorisiere: Zustand, Vitalwerte, Besonderheiten, Maßnahmen
+- Mindestens 2, maximal 5 Zeilen – kurz und prägnant
+- Korrekte Fachterminologie (Klient/Bewohner, Vitalwerte mit Einheiten)
+- Fließende Sätze mit professionellen Füllsätzen
+- Einleitender Satz zum Allgemeinzustand erwünscht
+- Auf Deutsch
+
+Antworte NUR als JSON (kein Text davor/danach):
+{
+  "uebergabe": "Text hier...",
+  "kategorien": ["Kategorie1"],
+  "relevanz": "uebergabe"
+}
+
+relevanz: "uebergabe" (Vitalwerte auffällig, Sturz, Arzt, Ablehnung, Zustandsänderung) ODER "berichteblatt" (Routine, normale Besuche, Alltag)
+Kategorien (nur passende): Arzt, Tagesaktuelle Ereignisse, Angehörige, Beratung, Betreuung, Fallbesprechung, Evaluation, Abweichungen vom Maßnahmenplan`;
+
+const KF = {
+  "Arzt": { bg: "rgba(220,80,80,0.15)", border: "rgba(220,80,80,0.4)", text: "#f09090" },
+  "Tagesaktuelle Ereignisse": { bg: "rgba(80,160,220,0.15)", border: "rgba(80,160,220,0.4)", text: "#90c8f0" },
+  "Angehörige": { bg: "rgba(160,100,220,0.15)", border: "rgba(160,100,220,0.4)", text: "#c090f0" },
+  "Beratung": { bg: "rgba(220,160,50,0.15)", border: "rgba(220,160,50,0.4)", text: "#f0c860" },
+  "Betreuung": { bg: "rgba(80,200,120,0.15)", border: "rgba(80,200,120,0.4)", text: "#80e0a0" },
+  "Fallbesprechung": { bg: "rgba(220,120,50,0.15)", border: "rgba(220,120,50,0.4)", text: "#f0a060" },
+  "Evaluation": { bg: "rgba(50,180,200,0.15)", border: "rgba(50,180,200,0.4)", text: "#70d8e8" },
+  "Abweichungen vom Maßnahmenplan": { bg: "rgba(220,50,120,0.15)", border: "rgba(220,50,120,0.4)", text: "#f070a0" },
+};
+
+let currentResult = "";
+
+function setMode(mode) {
+  document.body.classList.toggle('light', mode === 'light');
+  document.getElementById('btn-light').classList.toggle('active', mode === 'light');
+  document.getElementById('btn-dark').classList.toggle('active', mode === 'dark');
+  localStorage.setItem('mode', mode);
+}
+setMode(localStorage.getItem('mode') || 'dark');
+
+document.getElementById('input').addEventListener('input', function() {
+  document.getElementById('btn-generate').disabled = !this.value.trim();
+  updateClearBtn();
+});
+
+function updateClearBtn() {
+  const hasInput = document.getElementById('input').value.trim().length > 0;
+  document.getElementById('btn-clear').disabled = !hasInput && !currentResult;
+}
+
+async function generate() {
+  const input = document.getElementById('input').value.trim();
+  if (!input) return;
+
+  const btn = document.getElementById('btn-generate');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Formuliere...';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('result-card').style.display = 'none';
+  currentResult = "";
+
+  try {
+    const res = await fetch('/api/uebergabe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: PROMPT,
+        messages: [{ role: 'user', content: `Pflegenotizen umwandeln:\n\n${input}` }],
+      }),
+    });
+
+    const data = await res.json();
+    const raw = data.content?.map(b => b.text || '').join('') || '';
+
+    let uebergabe = raw, kategorien = [], relevanz = '';
+    try {
+      const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      uebergabe = parsed.uebergabe || raw;
+      kategorien = parsed.kategorien || [];
+      relevanz = parsed.relevanz || '';
+    } catch(e) {}
+
+    currentResult = uebergabe;
+
+    document.getElementById('result-text').textContent = uebergabe;
+
+    const badge = document.getElementById('relevanz-badge');
+    if (relevanz) {
+      const isU = relevanz === 'uebergabe';
+      badge.innerHTML = `<div class="relevanz-badge ${isU ? 'relevanz-uebergabe' : 'relevanz-berichteblatt'}">${isU ? '🔴' : '🔵'} ${isU ? 'Übergaberelevant' : 'Nur Berichteblatt'}</div>`;
+    } else { badge.innerHTML = ''; }
+
+    const container = document.getElementById('kategorien-container');
+    if (kategorien.length > 0) {
+      document.getElementById('tags-row').innerHTML = kategorien.map(kat => {
+        const f = KF[kat] || { bg: 'rgba(100,160,220,0.15)', border: 'rgba(100,160,220,0.4)', text: '#90b8e0' };
+        return `<span class="tag" style="background:${f.bg};border-color:${f.border};color:${f.text}">${kat}</span>`;
+      }).join('');
+      container.style.display = 'block';
+    } else { container.style.display = 'none'; }
+
+    document.getElementById('result-card').style.display = 'block';
+
+  } catch(e) {
+    const eb = document.getElementById('error-box');
+    eb.textContent = '⚠️ Verbindungsfehler: ' + e.message;
+    eb.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ Übergabe erstellen';
+  updateClearBtn();
+}
+
+function copyText() {
+  navigator.clipboard.writeText(currentResult).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function clearAll() {
+  document.getElementById('input').value = '';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  currentResult = '';
+  document.getElementById('btn-generate').disabled = true;
+  updateClearBtn();
+}
+
+document.getElementById('input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generate();
+});
+</script>
+</body>
+</html>
